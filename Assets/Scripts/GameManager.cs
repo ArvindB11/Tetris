@@ -125,22 +125,26 @@ public class GameManager : MonoBehaviour
 
     private void MoveRight()
     {
-        if (_currentStartingPointX + 1 >= WIDTH)
+        if (_currentStartingPointX + _currentlyControlledShapeCoords.Item3 + 1 >= WIDTH)
         {
             return;
         }
-        
-        
-        //OccupyPixel()
+
+        OccupyPixel(_currentStartingPointX + 1, _currentStartingPointY);
     }
 
     private void MoveLeft()
     {
+        if (_currentStartingPointX - _currentlyControlledShapeCoords.Item1 - 1 < 0)
+        {
+            return;
+        }
         
+        OccupyPixel(_currentStartingPointX - 1, _currentStartingPointY);
     }
 
     private Shape _currentlyControlledShape;
-    private (int, int, int, int) _currentlyControlledShapeCoords;
+    private (int, int, int, int) _currentlyControlledShapeCoords; // (minX, minY, maxX, maxY)
     private List<Pixel> _currentControlledPixels;
     private int _currentStartingPointX;
     private int _currentStartingPointY;
@@ -175,20 +179,37 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        _currentControlledPixels = new List<Pixel>();
         if (!gameOver)
         {
             OccupyPixel(spawnXStartPoint, spawnYStartPoint);
+        }
+        else
+        {
+            Debug.Log($"Game Over");
         }
     }
 
     private void OccupyPixel(int spawnXStartPoint, int spawnYStartPoint)
     {
+        _currentStartingPointX = spawnXStartPoint;
+        _currentStartingPointY = spawnYStartPoint;
+        
+        int controlledPixelsCount = _currentControlledPixels.Count;
+        
+        for (int i = 0; i < controlledPixelsCount; i++)
+        {
+            _currentControlledPixels[i].TurnOff();
+        }
+
+        _currentControlledPixels.Clear();
+        
         int count = _currentlyControlledShape.shapeCoords.Count;
-        _currentControlledPixels = new List<Pixel>();
+        
         for (int i = 0; i < count; i++)
         {
-            grid[spawnXStartPoint + _currentlyControlledShape.shapeCoords[i].x,
-                    spawnYStartPoint + _currentlyControlledShape.shapeCoords[i].y].TurnOn();
+            _currentControlledPixels.Add(grid[spawnXStartPoint + _currentlyControlledShape.shapeCoords[i].x,
+                    spawnYStartPoint + _currentlyControlledShape.shapeCoords[i].y].TurnOn());
         }
     }
     

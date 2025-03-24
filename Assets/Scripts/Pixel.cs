@@ -31,10 +31,12 @@ public class Pixel : MonoBehaviour
     private bool _isOccupied;
     public bool isOccupied => _isOccupied;
 
-    public void TurnOn()
+    public Pixel TurnOn()
     {
         pixelColor.color = Color.black;
         _isOccupied = true;
+
+        return this;
     }
 
     public void TurnOff()
