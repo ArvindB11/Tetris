@@ -31,8 +31,12 @@ public class Pixel : MonoBehaviour
     private bool _isOccupied;
     public bool isOccupied => _isOccupied;
 
-    public Pixel TurnOn()
+    private int _shapeId;
+    public int shapeId => _shapeId;
+    public Pixel TurnOn(int shapeIdCount)
     {
+        _shapeId = shapeIdCount;
+        
         pixelColor.color = Color.black;
         _isOccupied = true;
 
@@ -41,6 +45,7 @@ public class Pixel : MonoBehaviour
 
     public void TurnOff()
     {
+        _shapeId = -1;
         pixelColor.color = Color.white;
         _isOccupied = false;
     }

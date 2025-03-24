@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Shape
 {
+    public int shapeId;
     public List<Pixel.Coords> shapeCoords = new List<Pixel.Coords>();
 }
 
@@ -45,10 +46,10 @@ public class GameManager : MonoBehaviour
         Shape shape2 = new Shape();
         shape2.shapeCoords = new List<Pixel.Coords>();
         
-        shape.shapeCoords.Add(new Pixel.Coords(0, 0));
-        shape.shapeCoords.Add(new Pixel.Coords(0, 1));
-        shape.shapeCoords.Add(new Pixel.Coords(0, 2));
-        shape.shapeCoords.Add(new Pixel.Coords(1, 2));
+        shape2.shapeCoords.Add(new Pixel.Coords(0, 0));
+        shape2.shapeCoords.Add(new Pixel.Coords(0, 1));
+        shape2.shapeCoords.Add(new Pixel.Coords(0, 2));
+        shape2.shapeCoords.Add(new Pixel.Coords(1, 2));
 
         Shape shape3 = new Shape();
         shape3.shapeCoords = new List<Pixel.Coords>();
@@ -106,41 +107,219 @@ public class GameManager : MonoBehaviour
         
         if (_gameStarted)
         {
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
             {
                 MoveRight();
             }
 
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
             {
                 MoveLeft();
             }
 
-            if (Input.GetKeyDown(KeyCode.DownArrow))
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
-                
+                MoveDown();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Rotate();
             }
         }
     }
+private void Rotate()
+{
+    List<Pixel.Coords> rotatedCoords = new List<Pixel.Coords>();
 
-    private void MoveRight()
+    foreach (var coord in _currentlyControlledShape.shapeCoords)
     {
-        if (_currentStartingPointX + _currentlyControlledShapeCoords.Item3 + 1 >= WIDTH)
-        {
-            return;
-        }
-
-        OccupyPixel(_currentStartingPointX + 1, _currentStartingPointY);
+        int newX = -coord.y;
+        int newY = coord.x;
+        rotatedCoords.Add(new Pixel.Coords(newX, newY));
     }
 
-    private void MoveLeft()
+    int minX = int.MaxValue, minY = int.MaxValue;
+    foreach (var coord in rotatedCoords)
     {
-        if (_currentStartingPointX - _currentlyControlledShapeCoords.Item1 - 1 < 0)
+        if (coord.x < minX) minX = coord.x;
+        if (coord.y < minY) minY = coord.y;
+    }
+
+    List<Pixel.Coords> adjustedCoords = new List<Pixel.Coords>();
+    foreach (var coord in rotatedCoords)
+    {
+        adjustedCoords.Add(new Pixel.Coords(coord.x - minX, coord.y - minY));
+    }
+
+    Shape rotatedShape = new Shape
+    {
+        shapeId = _currentlyControlledShape.shapeId,
+        shapeCoords = adjustedCoords
+    };
+
+    if (!DoesAnyShapeOrFloorOverlap(rotatedShape, _currentStartingPointX, _currentStartingPointY))
+    {
+        _currentlyControlledShape.shapeCoords = adjustedCoords;
+        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    }
+}
+
+private void MoveRight()
+{
+    int newX = _currentStartingPointX + 1;
+    if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, newX, _currentStartingPointY))
+    {
+        _currentStartingPointX = newX;
+        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    }
+}
+
+private void MoveLeft()
+{
+    int newX = _currentStartingPointX - 1;
+    if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, newX, _currentStartingPointY))
+    {
+        _currentStartingPointX = newX;
+        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    }
+}
+
+private void MoveDown()
+{
+    int newY = _currentStartingPointY + 1;
+    if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, _currentStartingPointX, newY))
+    {
+        _currentStartingPointY = newY;
+        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    }
+    else
+    {
+        _gameStarted = false;
+        _currentlyControlledShape = null;
+    }
+}
+
+private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
+{
+    foreach (var coord in shape.shapeCoords)
+    {
+        int newX = startX + coord.x;
+        int newY = startY + coord.y;
+
+        if (newY >= HEIGHT || 
+            newX < 0 || newX >= WIDTH || 
+            (grid[newX, newY].isOccupied && grid[newX, newY].shapeId != shape.shapeId))
         {
-            return;
+            return true;
+        }
+    }
+    return false;
+}
+    // private void Rotate()
+    // {
+    //     List<Pixel.Coords> rotatedCoords = new List<Pixel.Coords>();
+    //
+    //     foreach (var coord in _currentlyControlledShape.shapeCoords)
+    //     {
+    //         int newX = -coord.y;
+    //         int newY = coord.x;
+    //         rotatedCoords.Add(new Pixel.Coords(newX, newY));
+    //     }
+    //
+    //     int minX = int.MaxValue, minY = int.MaxValue;
+    //     foreach (var coord in rotatedCoords)
+    //     {
+    //         if (coord.x < minX) minX = coord.x;
+    //         if (coord.y < minY) minY = coord.y;
+    //     }
+    //
+    //     List<Pixel.Coords> adjustedCoords = new List<Pixel.Coords>();
+    //     foreach (var coord in rotatedCoords)
+    //     {
+    //         adjustedCoords.Add(new Pixel.Coords(coord.x - minX, coord.y - minY));
+    //     }
+    //
+    //     foreach (var coord in adjustedCoords)
+    //     {
+    //         int newGridX = _currentStartingPointX + coord.x;
+    //         int newGridY = _currentStartingPointY + coord.y;
+    //
+    //         if (newGridX < 0 || newGridX >= WIDTH || newGridY < 0 || newGridY >= HEIGHT ||
+    //             (grid[newGridX, newGridY].isOccupied && grid[newGridX, newGridY].shapeId != _currentlyControlledShape.shapeId))
+    //         {
+    //             return;
+    //         }
+    //     }
+    //
+    //     _currentlyControlledShape.shapeCoords = adjustedCoords;
+    //     OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    // }
+    //
+    // private void MoveRight()
+    // {
+    //     if (_currentStartingPointX + _currentlyControlledShapeCoords.Item3 + 1 >= WIDTH)
+    //     {
+    //         return;
+    //     }
+    //
+    //     OccupyPixel(_currentStartingPointX + 1, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    //     
+    //     if (DoesAnyShapeOrFloorOverlap())
+    //     {
+    //         _gameStarted = false;
+    //         _currentlyControlledShape = null;
+    //     }
+    // }
+    //
+    // private void MoveLeft()
+    // {
+    //     if (_currentStartingPointX - _currentlyControlledShapeCoords.Item1 - 1 < 0)
+    //     {
+    //         return;
+    //     }
+    //     
+    //     OccupyPixel(_currentStartingPointX - 1, _currentStartingPointY, _currentlyControlledShape.shapeId);
+    //     
+    //     if (DoesAnyShapeOrFloorOverlap())
+    //     {
+    //         _gameStarted = false;
+    //         _currentlyControlledShape = null;
+    //     }
+    // }
+    //
+    // private void MoveDown()
+    // {
+    //     OccupyPixel(_currentStartingPointX, _currentStartingPointY + 1, _currentlyControlledShape.shapeId);
+    //     
+    //     if (DoesAnyShapeOrFloorOverlap())
+    //     {
+    //         _gameStarted = false;
+    //         _currentlyControlledShape = null;
+    //     }
+    // }
+
+    private bool DoesAnyShapeOrFloorOverlap()
+    {
+        if (_currentStartingPointY + 1 + _currentlyControlledShapeCoords.Item4 >= HEIGHT)
+        {
+            return true;
         }
         
-        OccupyPixel(_currentStartingPointX - 1, _currentStartingPointY);
+        int count = _currentlyControlledShape.shapeCoords.Count;
+        
+        for (int i = 0; i < count; i++)
+        {
+            if (grid[_currentStartingPointX + _currentlyControlledShape.shapeCoords[i].x,
+                         _currentStartingPointY + 1 + _currentlyControlledShape.shapeCoords[i].y].isOccupied && 
+                grid[_currentStartingPointX + _currentlyControlledShape.shapeCoords[i].x,
+                         _currentStartingPointY + 1 + _currentlyControlledShape.shapeCoords[i].y].shapeId != _currentlyControlledShape.shapeId)
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private Shape _currentlyControlledShape;
@@ -148,7 +327,8 @@ public class GameManager : MonoBehaviour
     private List<Pixel> _currentControlledPixels;
     private int _currentStartingPointX;
     private int _currentStartingPointY;
-    
+
+    private int _shapeIdCount;
     private void SpawnShape()
     {
         int count = _shapes.Count;
@@ -156,6 +336,7 @@ public class GameManager : MonoBehaviour
         int spawnRandomShapeId = UnityEngine.Random.Range(0, count);
 
         _currentlyControlledShape = new Shape();
+        _currentlyControlledShape.shapeId = _shapeIdCount++;
         _currentlyControlledShape.shapeCoords = new List<Pixel.Coords>();
         _currentlyControlledShape.shapeCoords.AddRange(_shapes[spawnRandomShapeId].shapeCoords);
         
@@ -182,7 +363,7 @@ public class GameManager : MonoBehaviour
         _currentControlledPixels = new List<Pixel>();
         if (!gameOver)
         {
-            OccupyPixel(spawnXStartPoint, spawnYStartPoint);
+            OccupyPixel(spawnXStartPoint, spawnYStartPoint, _currentlyControlledShape.shapeId);
         }
         else
         {
@@ -190,7 +371,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void OccupyPixel(int spawnXStartPoint, int spawnYStartPoint)
+    private void OccupyPixel(int spawnXStartPoint, int spawnYStartPoint, int shapeIdCount)
     {
         _currentStartingPointX = spawnXStartPoint;
         _currentStartingPointY = spawnYStartPoint;
@@ -209,7 +390,7 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             _currentControlledPixels.Add(grid[spawnXStartPoint + _currentlyControlledShape.shapeCoords[i].x,
-                    spawnYStartPoint + _currentlyControlledShape.shapeCoords[i].y].TurnOn());
+                    spawnYStartPoint + _currentlyControlledShape.shapeCoords[i].y].TurnOn(shapeIdCount));
         }
     }
     
