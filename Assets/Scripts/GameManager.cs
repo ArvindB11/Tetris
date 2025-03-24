@@ -30,14 +30,14 @@ public class GameManager : MonoBehaviour
 
 
     private List<Shape> _shapes;
-    
+
     private void GenerateShapes()
     {
         _shapes = new List<Shape>();
-        
+
         Shape shape = new Shape();
         shape.shapeCoords = new List<Pixel.Coords>();
-            
+
         for (int i = 0; i < 4; i++)
         {
             shape.shapeCoords.Add(new Pixel.Coords(i, 0));
@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour
 
         Shape shape2 = new Shape();
         shape2.shapeCoords = new List<Pixel.Coords>();
-        
+
         shape2.shapeCoords.Add(new Pixel.Coords(0, 0));
         shape2.shapeCoords.Add(new Pixel.Coords(0, 1));
         shape2.shapeCoords.Add(new Pixel.Coords(0, 2));
@@ -53,7 +53,7 @@ public class GameManager : MonoBehaviour
 
         Shape shape3 = new Shape();
         shape3.shapeCoords = new List<Pixel.Coords>();
-        
+
         shape3.shapeCoords.Add(new Pixel.Coords(0, 0));
         shape3.shapeCoords.Add(new Pixel.Coords(1, 0));
         shape3.shapeCoords.Add(new Pixel.Coords(0, 1));
@@ -61,7 +61,7 @@ public class GameManager : MonoBehaviour
 
         Shape shape4 = new Shape();
         shape4.shapeCoords = new List<Pixel.Coords>();
-        
+
         shape4.shapeCoords.Add(new Pixel.Coords(0, 0));
         shape4.shapeCoords.Add(new Pixel.Coords(0, 1));
         shape4.shapeCoords.Add(new Pixel.Coords(1, 1));
@@ -69,12 +69,12 @@ public class GameManager : MonoBehaviour
 
         Shape shape5 = new Shape();
         shape5.shapeCoords = new List<Pixel.Coords>();
-        
+
         shape5.shapeCoords.Add(new Pixel.Coords(0, 0));
         shape5.shapeCoords.Add(new Pixel.Coords(1, 0));
         shape5.shapeCoords.Add(new Pixel.Coords(2, 0));
         shape5.shapeCoords.Add(new Pixel.Coords(1, 1));
-        
+
         _shapes.Add(shape);
         _shapes.Add(shape2);
         _shapes.Add(shape3);
@@ -84,8 +84,9 @@ public class GameManager : MonoBehaviour
 
     public GameObject cellPrefab; // Assign this in the Inspector
     private Pixel[,] grid;
-    
+
     public Transform gridParent;
+
     void Start()
     {
         GeneratePixelBoard();
@@ -93,6 +94,7 @@ public class GameManager : MonoBehaviour
     }
 
     private bool _gameStarted;
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -104,7 +106,7 @@ public class GameManager : MonoBehaviour
                 SpawnShape();
             }
         }
-        
+
         if (_gameStarted)
         {
             if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
@@ -128,176 +130,96 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-private void Rotate()
-{
-    List<Pixel.Coords> rotatedCoords = new List<Pixel.Coords>();
 
-    foreach (var coord in _currentlyControlledShape.shapeCoords)
+    private void Rotate()
     {
-        int newX = -coord.y;
-        int newY = coord.x;
-        rotatedCoords.Add(new Pixel.Coords(newX, newY));
-    }
+        List<Pixel.Coords> rotatedCoords = new List<Pixel.Coords>();
 
-    int minX = int.MaxValue, minY = int.MaxValue;
-    foreach (var coord in rotatedCoords)
-    {
-        if (coord.x < minX) minX = coord.x;
-        if (coord.y < minY) minY = coord.y;
-    }
-
-    List<Pixel.Coords> adjustedCoords = new List<Pixel.Coords>();
-    foreach (var coord in rotatedCoords)
-    {
-        adjustedCoords.Add(new Pixel.Coords(coord.x - minX, coord.y - minY));
-    }
-
-    Shape rotatedShape = new Shape
-    {
-        shapeId = _currentlyControlledShape.shapeId,
-        shapeCoords = adjustedCoords
-    };
-
-    if (!DoesAnyShapeOrFloorOverlap(rotatedShape, _currentStartingPointX, _currentStartingPointY))
-    {
-        _currentlyControlledShape.shapeCoords = adjustedCoords;
-        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    }
-}
-
-private void MoveRight()
-{
-    int newX = _currentStartingPointX + 1;
-    if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, newX, _currentStartingPointY))
-    {
-        _currentStartingPointX = newX;
-        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    }
-}
-
-private void MoveLeft()
-{
-    int newX = _currentStartingPointX - 1;
-    if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, newX, _currentStartingPointY))
-    {
-        _currentStartingPointX = newX;
-        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    }
-}
-
-private void MoveDown()
-{
-    int newY = _currentStartingPointY + 1;
-    if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, _currentStartingPointX, newY))
-    {
-        _currentStartingPointY = newY;
-        OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    }
-    else
-    {
-        _gameStarted = false;
-        _currentlyControlledShape = null;
-    }
-}
-
-private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
-{
-    foreach (var coord in shape.shapeCoords)
-    {
-        int newX = startX + coord.x;
-        int newY = startY + coord.y;
-
-        if (newY >= HEIGHT || 
-            newX < 0 || newX >= WIDTH || 
-            (grid[newX, newY].isOccupied && grid[newX, newY].shapeId != shape.shapeId))
+        foreach (var coord in _currentlyControlledShape.shapeCoords)
         {
-            return true;
+            int newX = -coord.y;
+            int newY = coord.x;
+            rotatedCoords.Add(new Pixel.Coords(newX, newY));
+        }
+
+        int minX = int.MaxValue, minY = int.MaxValue;
+        foreach (var coord in rotatedCoords)
+        {
+            if (coord.x < minX) minX = coord.x;
+            if (coord.y < minY) minY = coord.y;
+        }
+
+        List<Pixel.Coords> adjustedCoords = new List<Pixel.Coords>();
+        foreach (var coord in rotatedCoords)
+        {
+            adjustedCoords.Add(new Pixel.Coords(coord.x - minX, coord.y - minY));
+        }
+
+        Shape rotatedShape = new Shape
+        {
+            shapeId = _currentlyControlledShape.shapeId,
+            shapeCoords = adjustedCoords
+        };
+
+        if (!DoesAnyShapeOrFloorOverlap(rotatedShape, _currentStartingPointX, _currentStartingPointY))
+        {
+            _currentlyControlledShape.shapeCoords = adjustedCoords;
+            OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
         }
     }
-    return false;
-}
-    // private void Rotate()
-    // {
-    //     List<Pixel.Coords> rotatedCoords = new List<Pixel.Coords>();
-    //
-    //     foreach (var coord in _currentlyControlledShape.shapeCoords)
-    //     {
-    //         int newX = -coord.y;
-    //         int newY = coord.x;
-    //         rotatedCoords.Add(new Pixel.Coords(newX, newY));
-    //     }
-    //
-    //     int minX = int.MaxValue, minY = int.MaxValue;
-    //     foreach (var coord in rotatedCoords)
-    //     {
-    //         if (coord.x < minX) minX = coord.x;
-    //         if (coord.y < minY) minY = coord.y;
-    //     }
-    //
-    //     List<Pixel.Coords> adjustedCoords = new List<Pixel.Coords>();
-    //     foreach (var coord in rotatedCoords)
-    //     {
-    //         adjustedCoords.Add(new Pixel.Coords(coord.x - minX, coord.y - minY));
-    //     }
-    //
-    //     foreach (var coord in adjustedCoords)
-    //     {
-    //         int newGridX = _currentStartingPointX + coord.x;
-    //         int newGridY = _currentStartingPointY + coord.y;
-    //
-    //         if (newGridX < 0 || newGridX >= WIDTH || newGridY < 0 || newGridY >= HEIGHT ||
-    //             (grid[newGridX, newGridY].isOccupied && grid[newGridX, newGridY].shapeId != _currentlyControlledShape.shapeId))
-    //         {
-    //             return;
-    //         }
-    //     }
-    //
-    //     _currentlyControlledShape.shapeCoords = adjustedCoords;
-    //     OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    // }
-    //
-    // private void MoveRight()
-    // {
-    //     if (_currentStartingPointX + _currentlyControlledShapeCoords.Item3 + 1 >= WIDTH)
-    //     {
-    //         return;
-    //     }
-    //
-    //     OccupyPixel(_currentStartingPointX + 1, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    //     
-    //     if (DoesAnyShapeOrFloorOverlap())
-    //     {
-    //         _gameStarted = false;
-    //         _currentlyControlledShape = null;
-    //     }
-    // }
-    //
-    // private void MoveLeft()
-    // {
-    //     if (_currentStartingPointX - _currentlyControlledShapeCoords.Item1 - 1 < 0)
-    //     {
-    //         return;
-    //     }
-    //     
-    //     OccupyPixel(_currentStartingPointX - 1, _currentStartingPointY, _currentlyControlledShape.shapeId);
-    //     
-    //     if (DoesAnyShapeOrFloorOverlap())
-    //     {
-    //         _gameStarted = false;
-    //         _currentlyControlledShape = null;
-    //     }
-    // }
-    //
-    // private void MoveDown()
-    // {
-    //     OccupyPixel(_currentStartingPointX, _currentStartingPointY + 1, _currentlyControlledShape.shapeId);
-    //     
-    //     if (DoesAnyShapeOrFloorOverlap())
-    //     {
-    //         _gameStarted = false;
-    //         _currentlyControlledShape = null;
-    //     }
-    // }
+
+    private void MoveRight()
+    {
+        int newX = _currentStartingPointX + 1;
+        if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, newX, _currentStartingPointY))
+        {
+            _currentStartingPointX = newX;
+            OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+        }
+    }
+
+    private void MoveLeft()
+    {
+        int newX = _currentStartingPointX - 1;
+        if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, newX, _currentStartingPointY))
+        {
+            _currentStartingPointX = newX;
+            OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+        }
+    }
+
+    private void MoveDown()
+    {
+        int newY = _currentStartingPointY + 1;
+        if (!DoesAnyShapeOrFloorOverlap(_currentlyControlledShape, _currentStartingPointX, newY))
+        {
+            _currentStartingPointY = newY;
+            OccupyPixel(_currentStartingPointX, _currentStartingPointY, _currentlyControlledShape.shapeId);
+        }
+        else
+        {
+            _gameStarted = false;
+            _currentlyControlledShape = null;
+        }
+    }
+
+    private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
+    {
+        foreach (var coord in shape.shapeCoords)
+        {
+            int newX = startX + coord.x;
+            int newY = startY + coord.y;
+
+            if (newY >= HEIGHT ||
+                newX < 0 || newX >= WIDTH ||
+                (grid[newX, newY].isOccupied && grid[newX, newY].shapeId != shape.shapeId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private bool DoesAnyShapeOrFloorOverlap()
     {
@@ -305,20 +227,21 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
         {
             return true;
         }
-        
+
         int count = _currentlyControlledShape.shapeCoords.Count;
-        
+
         for (int i = 0; i < count; i++)
         {
             if (grid[_currentStartingPointX + _currentlyControlledShape.shapeCoords[i].x,
-                         _currentStartingPointY + 1 + _currentlyControlledShape.shapeCoords[i].y].isOccupied && 
+                    _currentStartingPointY + 1 + _currentlyControlledShape.shapeCoords[i].y].isOccupied &&
                 grid[_currentStartingPointX + _currentlyControlledShape.shapeCoords[i].x,
-                         _currentStartingPointY + 1 + _currentlyControlledShape.shapeCoords[i].y].shapeId != _currentlyControlledShape.shapeId)
+                    _currentStartingPointY + 1 + _currentlyControlledShape.shapeCoords[i].y].shapeId !=
+                _currentlyControlledShape.shapeId)
             {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -329,6 +252,7 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
     private int _currentStartingPointY;
 
     private int _shapeIdCount;
+
     private void SpawnShape()
     {
         int count = _shapes.Count;
@@ -339,7 +263,7 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
         _currentlyControlledShape.shapeId = _shapeIdCount++;
         _currentlyControlledShape.shapeCoords = new List<Pixel.Coords>();
         _currentlyControlledShape.shapeCoords.AddRange(_shapes[spawnRandomShapeId].shapeCoords);
-        
+
         _currentlyControlledShapeCoords = GetMinMaxOfShape(_shapes[spawnRandomShapeId]);
 
         var spawnXStartPoint = UnityEngine.Random.Range(0, WIDTH - 1 - _currentlyControlledShapeCoords.Item3);
@@ -347,7 +271,7 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
 
         _currentStartingPointX = spawnXStartPoint;
         _currentStartingPointY = spawnYStartPoint;
-        
+
         count = _currentlyControlledShape.shapeCoords.Count;
 
         bool gameOver = false;
@@ -375,25 +299,25 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
     {
         _currentStartingPointX = spawnXStartPoint;
         _currentStartingPointY = spawnYStartPoint;
-        
+
         int controlledPixelsCount = _currentControlledPixels.Count;
-        
+
         for (int i = 0; i < controlledPixelsCount; i++)
         {
             _currentControlledPixels[i].TurnOff();
         }
 
         _currentControlledPixels.Clear();
-        
+
         int count = _currentlyControlledShape.shapeCoords.Count;
-        
+
         for (int i = 0; i < count; i++)
         {
             _currentControlledPixels.Add(grid[spawnXStartPoint + _currentlyControlledShape.shapeCoords[i].x,
-                    spawnYStartPoint + _currentlyControlledShape.shapeCoords[i].y].TurnOn(shapeIdCount));
+                spawnYStartPoint + _currentlyControlledShape.shapeCoords[i].y].TurnOn(shapeIdCount));
         }
     }
-    
+
     private (int, int, int, int) GetMinMaxOfShape(Shape shape)
     {
         int count = shape.shapeCoords.Count;
@@ -402,7 +326,7 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
         int minY = 100;
         int maxX = -1;
         int maxY = -1;
-        
+
         for (int i = 0; i < count; i++)
         {
             if (minX > shape.shapeCoords[i].x)
@@ -434,14 +358,14 @@ private bool DoesAnyShapeOrFloorOverlap(Shape shape, int startX, int startY)
 
     private void GeneratePixelBoard()
     {
-        grid = new Pixel[WIDTH,HEIGHT];    
+        grid = new Pixel[WIDTH, HEIGHT];
 
         for (int i = 0; i < WIDTH; i++)
         {
             for (int j = 0; j < HEIGHT; j++)
             {
                 Pixel cell = Instantiate(cellPrefab, gridParent).GetComponent<Pixel>();
-                
+
                 grid[i, j] = cell;
                 cell.SetProperties(i, j);
             }
